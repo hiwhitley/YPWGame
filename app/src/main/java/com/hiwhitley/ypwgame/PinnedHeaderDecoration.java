@@ -9,7 +9,14 @@ import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
+
+    private static final String TAG = "PinnedHeaderDecoration";
+
     private int mHeaderPosition;
     private int mPinnedHeaderTop;
 
@@ -18,8 +25,8 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
     private Rect mClipBounds;
     private View mPinnedHeaderView;
     private RecyclerView.Adapter mAdapter;
-    private static final String TAG = "PinnedHeaderDecoration";
     private int viewType;
+    private List<Integer> pinnedTypeHeader = new ArrayList<>();
 
     private final SparseArray<PinnedHeaderCreator> mTypePinnedHeaderFactories = new SparseArray<>();
     private final RecyclerView.AdapterDataObserver mAdapterDataObserver = new RecyclerView.AdapterDataObserver() {
@@ -33,15 +40,25 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
         this.mHeaderPosition = -1;
     }
 
+    // 当我们调用mRecyclerView.addItemDecoration()方法添加decoration的时候，RecyclerView在绘制的时候，去会绘制decorator，即调用该类的onDraw和onDrawOver方法，
+    // 1.onDraw方法先于drawChildren
+    // 2.onDrawOver在drawChildren之后，一般我们选择复写其中一个即可。
+    // 3.getItemOffsets 可以通过outRect.set()为每个Item设置一定的偏移量，主要用于绘制Decorator。
+
     @Override
     public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+
+        //检测标签，并将标签强制固定在顶部
         createPinnedHeader(parent);
 
-        if (mPinnedHeaderView != null && viewType == RecyclerItem.ITEM_HEADER) {
+        if (mPinnedHeaderView != null && pinnedTypeHeader.contains(viewType)) {
             int headerEndAt = mPinnedHeaderView.getTop() + mPinnedHeaderView.getHeight();
+
+            // 根据坐标查找view，headEnd + 1找到的就是mPinnedHeaderView底部下面的view
             View v = parent.findChildViewUnder(c.getWidth() / 2, headerEndAt + 1);
 
             if (isHeaderView(parent, v)) {
+                // 如果是标签的话，缓存的标签就要同步跟此标签移动
                 mPinnedHeaderTop = v.getTop() - mPinnedHeaderView.getHeight();
             } else {
                 mPinnedHeaderTop = 0;
@@ -57,7 +74,7 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
-        if (mPinnedHeaderView != null && viewType == RecyclerItem.ITEM_HEADER) {
+        if (mPinnedHeaderView != null && pinnedTypeHeader.contains(viewType)) {
             c.save();
 
             mClipBounds.top = 0;
@@ -76,23 +93,28 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
         if (layoutManager == null || layoutManager.getChildCount() <= 0) {
             return;
         }
+        //获取第一个可见item的position
         int firstVisiblePosition = ((RecyclerView.LayoutParams) layoutManager.getChildAt(0).getLayoutParams()).getViewAdapterPosition();
         int headerPosition = findPinnedHeaderPosition(parent, firstVisiblePosition);
 
         if (headerPosition >= 0 && mHeaderPosition != headerPosition) {
+
             mHeaderPosition = headerPosition;
+            //获取标签类型
             viewType = mAdapter.getItemViewType(headerPosition);
+            //手动调用创建标签
             RecyclerView.ViewHolder pinnedViewHolder = mAdapter.createViewHolder(parent, viewType);
             mAdapter.bindViewHolder(pinnedViewHolder, headerPosition);
             mPinnedHeaderView = pinnedViewHolder.itemView;
 
-            // read layout parameters
             ViewGroup.LayoutParams layoutParams = mPinnedHeaderView.getLayoutParams();
             if (layoutParams == null) {
+                // 标签默认宽度占满parent
                 layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 mPinnedHeaderView.setLayoutParams(layoutParams);
             }
 
+            // 测量高度
             int heightMode = View.MeasureSpec.getMode(layoutParams.height);
             int heightSize = View.MeasureSpec.getSize(layoutParams.height);
 
@@ -105,14 +127,21 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
                 heightSize = maxHeight;
             }
 
-            // measure & layout
             int ws = View.MeasureSpec.makeMeasureSpec(parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), View.MeasureSpec.EXACTLY);
             int hs = View.MeasureSpec.makeMeasureSpec(heightSize, heightMode);
             mPinnedHeaderView.measure(ws, hs);
+
+            // 位置强制布局在顶部
             mPinnedHeaderView.layout(0, 0, mPinnedHeaderView.getMeasuredWidth(), mPinnedHeaderView.getMeasuredHeight());
         }
     }
 
+    /**
+     * 从传入位置递减找出标签的位置
+     * @param parent
+     * @param fromPosition
+     * @return
+     */
     private int findPinnedHeaderPosition(RecyclerView parent, int fromPosition) {
         if (fromPosition > mAdapter.getItemCount() || fromPosition < 0) {
             return -1;
@@ -126,6 +155,11 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
         }
 
         return -1;
+    }
+
+    public PinnedHeaderDecoration setPinnedTypeHeader(Integer... pinnedTypeHeader) {
+        this.pinnedTypeHeader.addAll(Arrays.asList(pinnedTypeHeader));
+        return this;
     }
 
     private boolean isPinnedViewType(RecyclerView parent, int adapterPosition, int viewType) {

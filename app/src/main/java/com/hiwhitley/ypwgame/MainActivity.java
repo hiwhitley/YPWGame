@@ -26,13 +26,18 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_main);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerItems = new ArrayList<>();
+
         for (int i = 0; i < 15; i++) {
             mRecyclerItems.add(new RecyclerItem(RecyclerItem.ITEM_HEADER));
             mRecyclerItems.add(new RecyclerItem(RecyclerItem.ITEM_POSTER));
             mRecyclerItems.add(new RecyclerItem(RecyclerItem.ITEM_DESC));
         }
+
         mRecyclerView.setAdapter(new MainListAdapter(mRecyclerItems));
+
         PinnedHeaderDecoration pinnedHeaderDecoration = new PinnedHeaderDecoration();
+        //设置只有RecyclerItem.ITEM_HEADER的item显示标签
+        pinnedHeaderDecoration.setPinnedTypeHeader(RecyclerItem.ITEM_HEADER);
         pinnedHeaderDecoration.registerTypePinnedHeader(RecyclerItem.ITEM_HEADER, new PinnedHeaderDecoration.PinnedHeaderCreator() {
             @Override
             public boolean create(RecyclerView parent, int adapterPosition) {
