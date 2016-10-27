@@ -16,26 +16,22 @@ import java.util.List;
 public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
 
     private static final String TAG = "PinnedHeaderDecoration";
-
+    private final SparseArray<PinnedHeaderCreator> mTypePinnedHeaderFactories = new SparseArray<>();
     private int mHeaderPosition;
     private int mPinnedHeaderTop;
-
     private boolean mIsAdapterDataChanged;
-
-    private Rect mClipBounds;
-    private View mPinnedHeaderView;
-    private RecyclerView.Adapter mAdapter;
-    private int viewType;
-    //需要置顶显示的标签
-    private List<Integer> pinnedTypeHeader = new ArrayList<>();
-
-    private final SparseArray<PinnedHeaderCreator> mTypePinnedHeaderFactories = new SparseArray<>();
     private final RecyclerView.AdapterDataObserver mAdapterDataObserver = new RecyclerView.AdapterDataObserver() {
         @Override
         public void onChanged() {
             mIsAdapterDataChanged = true;
         }
     };
+    private Rect mClipBounds;
+    private View mPinnedHeaderView;
+    private RecyclerView.Adapter mAdapter;
+    private int viewType;
+    //需要置顶显示的标签
+    private List<Integer> pinnedTypeHeader = new ArrayList<>();
 
     public PinnedHeaderDecoration() {
         this.mHeaderPosition = -1;
@@ -127,6 +123,7 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
             if (heightSize > maxHeight) {
                 heightSize = maxHeight;
             }
+
 
             int ws = View.MeasureSpec.makeMeasureSpec(parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), View.MeasureSpec.EXACTLY);
             int hs = View.MeasureSpec.makeMeasureSpec(heightSize, heightMode);
