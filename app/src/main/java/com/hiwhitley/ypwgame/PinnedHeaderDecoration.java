@@ -26,6 +26,7 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
     private View mPinnedHeaderView;
     private RecyclerView.Adapter mAdapter;
     private int viewType;
+    //需要置顶显示的标签
     private List<Integer> pinnedTypeHeader = new ArrayList<>();
 
     private final SparseArray<PinnedHeaderCreator> mTypePinnedHeaderFactories = new SparseArray<>();
@@ -157,6 +158,11 @@ public class PinnedHeaderDecoration extends RecyclerView.ItemDecoration {
         return -1;
     }
 
+    /**
+     * 设置需要置顶显示的标签
+     * @param pinnedTypeHeader
+     * @return
+     */
     public PinnedHeaderDecoration setPinnedTypeHeader(Integer... pinnedTypeHeader) {
         this.pinnedTypeHeader.addAll(Arrays.asList(pinnedTypeHeader));
         return this;
