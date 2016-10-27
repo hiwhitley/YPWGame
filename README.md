@@ -1,13 +1,10 @@
 # YPWGame  
----
 An Sample for RecyclerView with PinnedHeader 
 
 # ScreenShot
----
 ![](http://i.imgur.com/91kte3F.gif)
 
 # License
----
  ```  
 
    Copyright 2016 hiwhitley.
